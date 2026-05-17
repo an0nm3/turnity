@@ -105,7 +105,7 @@ async def api_check(
         "text_preview": text[:300],
     }
 
-    report_id = await save_report(user.id, text, title, result) if user else None
+    report_id = await save_report(user["id"], text, title, result, token) if user else None
     result["report_id"] = report_id
 
     return {"success": True, "result": result}
@@ -118,7 +118,7 @@ async def api_reports(request: Request):
     user = await get_user(auth_header[7:])
     if not user:
         return JSONResponse({"reports": []})
-    reports = await get_user_reports(user.id)
+    reports = await get_user_reports(user["id"], auth_header[7:])
     return {"reports": reports}
 
 @app.get("/report/{report_id}")
@@ -133,7 +133,7 @@ async def api_report(report_id: str, request: Request):
     user = await get_user(auth_header[7:])
     if not user:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    report = await get_report(report_id, user.id)
+    report = await get_report(report_id, user["id"], auth_header[7:])
     if not report:
         raise HTTPException(status_code=404, detail="Report not found")
     return report

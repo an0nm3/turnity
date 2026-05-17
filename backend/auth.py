@@ -1,33 +1,57 @@
 import sys, os
 sys.path.insert(0, os.path.dirname(__file__))
-from supabase import create_client, Client
-from config import SUPABASE_URL, SUPABASE_KEY
 import httpx
+from config import SUPABASE_URL, SUPABASE_KEY
 
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+AUTH_URL = SUPABASE_URL.rstrip("/") + "/auth/v1"
 
 async def signup(email: str, password: str):
     try:
-        res = supabase.auth.sign_up({"email": email, "password": password})
-        return {"success": True, "user": res.user.model_dump() if res.user else None}
+        async with httpx.AsyncClient() as client:
+            res = await client.post(
+                f"{AUTH_URL}/signup",
+                json={"email": email, "password": password},
+                headers={"apikey": SUPABASE_KEY, "Content-Type": "application/json"},
+            )
+            if res.status_code == 200:
+                data = res.json()
+                return {"success": True, "user": data.get("id")}
+            else:
+                err = res.json()
+                return {"success": False, "error": err.get("msg", err.get("error_description", "Signup failed"))}
     except Exception as e:
         return {"success": False, "error": str(e)}
 
 async def login(email: str, password: str):
     try:
-        res = supabase.auth.sign_in_with_password({"email": email, "password": password})
-        return {
-            "success": True,
-            "access_token": res.session.access_token,
-            "user_id": res.user.id,
-            "email": res.user.email,
-        }
+        async with httpx.AsyncClient() as client:
+            res = await client.post(
+                f"{AUTH_URL}/token?grant_type=password",
+                json={"email": email, "password": password},
+                headers={"apikey": SUPABASE_KEY, "Content-Type": "application/json"},
+            )
+            if res.status_code == 200:
+                data = res.json()
+                return {
+                    "success": True,
+                    "access_token": data["access_token"],
+                    "user_id": data["user"]["id"],
+                    "email": data["user"]["email"],
+                }
+            else:
+                return {"success": False, "error": "Invalid credentials"}
     except Exception as e:
         return {"success": False, "error": str(e)}
 
 async def get_user(token: str):
     try:
-        res = supabase.auth.get_user(token)
-        return res.user
+        async with httpx.AsyncClient() as client:
+            res = await client.get(
+                f"{AUTH_URL}/user",
+                headers={"apikey": SUPABASE_KEY, "Authorization": f"Bearer {token}"},
+            )
+            if res.status_code == 200:
+                return res.json()
+            return None
     except Exception:
         return None
