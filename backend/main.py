@@ -108,18 +108,6 @@ async def api_report(report_id: str, request: Request):
     if not report:
         raise HTTPException(status_code=404, detail="Report not found")
     return report
-
-@app.get("/api/debug")
-async def debug_env():
-    from config import SUPABASE_URL, SUPABASE_KEY, HF_API_TOKEN, GOOGLE_API_KEY, GOOGLE_CSE_ID
-    return {
-        "SUPABASE_URL": (SUPABASE_URL or "")[:40] + "..." if SUPABASE_URL else "MISSING",
-        "SUPABASE_KEY": "set (" + str(len(SUPABASE_KEY or "")) + " chars)" if SUPABASE_KEY else "MISSING",
-        "HF_API_TOKEN": "set" if HF_API_TOKEN else "MISSING",
-        "GOOGLE_API_KEY": "set" if GOOGLE_API_KEY else "MISSING",
-        "GOOGLE_CSE_ID": GOOGLE_CSE_ID or "MISSING",
-    }
-
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
