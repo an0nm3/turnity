@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIDetect - Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-left">
+            <div class="logo-icon small">AI</div>
+            <span class="nav-brand">AIDetect</span>
+        </div>
+        <div class="nav-right">
+            <span id="userEmail" class="nav-email"></span>
+            <a href="/" id="logoutBtn" class="nav-link">Logout</a>
+        </div>
+    </nav>
+
+    <main class="dashboard">
+        <div class="container">
+            <div class="stats-row">
+                <div class="stat-card">
+                    <span class="stat-label">Checks Today</span>
+                    <span id="checksToday" class="stat-value">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Daily Limit</span>
+                    <span class="stat-value">50</span>
+                </div>
+            </div>
+
+            <div class="check-card">
+                <h2>Check Content</h2>
+                <div class="form-group">
+                    <label for="title">Title (optional)</label>
+                    <input type="text" id="title" placeholder="Research Paper, Article, etc.">
+                </div>
+                <div class="form-group">
+                    <label for="textInput">Paste your text below</label>
+                    <textarea id="textInput" placeholder="Paste at least 50 characters..." rows="10"></textarea>
+                    <div class="char-count"><span id="charCount">0</span> / 10,000</div>
+                </div>
+                <button id="checkBtn" class="btn-primary btn-lg" onclick="runCheck()">
+                    <span class="btn-text">Run Analysis</span>
+                    <span class="btn-loader hidden">Analyzing...</span>
+                </button>
+                <div id="checkError" class="error-msg hidden"></div>
+            </div>
+
+            <div id="results" class="results-section hidden">
+                <h2>Results</h2>
+                <div class="scores-row">
+                    <div class="score-card ai-score">
+                        <h3>AI Content</h3>
+                        <div class="score-ring">
+                            <svg viewBox="0 0 36 36">
+                                <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                <path id="aiRing" class="ring-fill ai" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                <text x="18" y="20.5" class="score-text" id="aiScoreText">0%</text>
+                            </svg>
+                        </div>
+                        <div class="confidence-badge" id="aiConfidence">-</div>
+                    </div>
+                    <div class="score-card human-score">
+                        <h3>Human Content</h3>
+                        <div class="score-ring">
+                            <svg viewBox="0 0 36 36">
+                                <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                <path id="humanRing" class="ring-fill human" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                <text x="18" y="20.5" class="score-text" id="humanScoreText">0%</text>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="score-card plag-score">
+                        <h3>Plagiarism Risk</h3>
+                        <div class="score-ring">
+                            <svg viewBox="0 0 36 36">
+                                <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                <path id="plagRing" class="ring-fill plag" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                <text x="18" y="20.5" class="score-text" id="plagScoreText">0%</text>
+                            </svg>
+                        </div>
+                        <div class="matches-count" id="matchesCount">0 sources</div>
+                    </div>
+                </div>
+
+                <div class="model-breakdown" id="modelBreakdown">
+                    <h3>Model Breakdown</h3>
+                    <div id="modelList"></div>
+                </div>
+
+                <div class="sources-section" id="sourcesSection">
+                    <h3>Matched Sources</h3>
+                    <div id="sourcesList"></div>
+                </div>
+
+                <a id="viewReportBtn" href="#" class="btn-secondary">View Full Report</a>
+            </div>
+
+            <div class="history-section">
+                <h2>Recent Checks</h2>
+                <div id="historyList" class="history-list">
+                    <p class="empty-state">No checks yet. Run your first analysis above.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script src="/static/js/dashboard.js"></script>
+</body>
+</html>
