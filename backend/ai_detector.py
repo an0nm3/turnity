@@ -1,58 +1,6 @@
 import sys, os
 sys.path.insert(0, os.path.dirname(__file__))
-import httpx
-from config import HF_API_TOKEN
-
-HF_BASE = "https://router.huggingface.co/v1"
-DETECTOR_MODEL = "meta-llama/Llama-3.1-8B-Instruct"
-
-DETECTION_PROMPT = """You are an AI content detection expert. Analyze the following text and determine if it was written by a human or an AI.
-
-Consider:
-- Sentence structure variety (humans vary more, AI is more uniform)
-- Use of contractions and informal language (more human)
-- Natural imperfections and varied tone
-- Repetitive patterns (more AI-like)
-- Depth of personal experience or unique perspective (more human)
-
-Respond with ONLY a JSON object like this, no other text:
-{"ai_score": 0-100, "human_score": 0-100, "reasoning": "brief explanation"}"""
-
-async def detect_with_llm(text: str) -> dict:
-    if not HF_API_TOKEN:
-        return None
-    try:
-        async with httpx.AsyncClient(timeout=120.0) as client:
-            resp = await client.post(
-                f"{HF_BASE}/chat/completions",
-                json={
-                    "model": DETECTOR_MODEL,
-                    "messages": [
-                        {"role": "system", "content": DETECTION_PROMPT},
-                        {"role": "user", "content": f"Analyze this text:\n\n{text[:1500]}"},
-                    ],
-                    "max_tokens": 200,
-                    "temperature": 0.1,
-                },
-                headers={"Authorization": f"Bearer {HF_API_TOKEN}"},
-            )
-            if resp.status_code == 200:
-                data = resp.json()
-                content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-                import re, json
-                match = re.search(r'\{[^{}]*\}', content)
-                if match:
-                    result = json.loads(match.group())
-                    return {
-                        "ai_score": float(result.get("ai_score", 50)),
-                        "human_score": float(result.get("human_score", 50)),
-                        "confidence": "medium",
-                        "models": [{"model": "Llama-3.1-8B (AI Detector)", "ai_score": round(float(result.get("ai_score", 50)), 1), "human_score": round(float(result.get("human_score", 50)), 1)}],
-                    }
-        return None
-    except Exception as e:
-        print(f"LLM detect error: {e}")
-        return None
+import re
 
 def heuristic_detect(text: str) -> dict:
     words = text.split()
@@ -86,7 +34,7 @@ def heuristic_detect(text: str) -> dict:
     elif contraction_count == 0 and total > 50:
         signals["ai"] += 1
 
-    filler = ["basically", "actually", "honestly", "literally", "honestly", "anyway", "well ", "you know", "i think", "the thing is", "i feel like", "sort of", "kind of"]
+    filler = ["basically", "actually", "honestly", "literally", "anyway", "well ", "you know", "i think", "the thing is", "i feel like", "sort of", "kind of"]
     signals["total_checks"] += 1
     filler_count = sum(1 for f in filler if f in text.lower())
     if filler_count > 2:
@@ -117,7 +65,4 @@ def heuristic_detect(text: str) -> dict:
     }
 
 async def detect_ai(text: str) -> dict:
-    result = await detect_with_llm(text)
-    if result:
-        return result
     return heuristic_detect(text)
